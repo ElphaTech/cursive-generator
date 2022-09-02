@@ -76,7 +76,12 @@ for word in words:
                 else:
 
                     if word[i]=="/":
-                        if j["fileName"]=="slash":
+                        if j["fileName"][:5]=="slash":
+                            saveWord()
+                            prevTB="b"
+
+                    elif word[i]==".":
+                        if j["fileName"][:3]=="dot":
                             saveWord()
                             prevTB="b"
 
