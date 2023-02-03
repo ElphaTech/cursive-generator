@@ -1,23 +1,30 @@
 import os
-import pygame
 from time import sleep
+import sys
+import pygame
 
-lettersContainers="letters/"
-lettersFileExtension=".bmp"
-letters=[]
+def importImage(fileN):
+    image = pygame.image.load(fileN)
+    width = image.get_width()
+    height = image.get_height()
+    image = pygame.transform.scale(image,(int(width*heightMult),int(height*heightMult)))
+    width = image.get_width()
+    height = image.get_height()
+    return image, width, height
+
+
+heightMult = 1
+lettersContainers = "letters/"
+lettersFileExtension = ".bmp"
+letters = {}
 for i in os.listdir(lettersContainers):
-    letters.insert(0,{})
-    letters[0]["fileName"]=i[:-4]
+    if i[:-7] not in letters:
+        letters[i[:-7]] = {}
 
-heightMult=5
-for i in range(len(letters)):
-    tempFN=f"{lettersContainers}{letters[i]['fileName']}{lettersFileExtension}"
-    letters[i]["image"]=pygame.image.load(tempFN)
-    letters[i]["width"]=letters[i]["image"].get_width()
-    letters[i]["height"]=letters[i]["image"].get_height()
-    letters[i]["image"]=pygame.transform.scale(letters[i]["image"],(int(letters[i]["width"]*heightMult),int(letters[i]["height"]*heightMult)))
-    letters[i]["width"]=letters[i]["image"].get_width()
-    letters[i]["height"]=letters[i]["image"].get_height()
+    letters[i[:-7]][i[-7:-4]]={}
+    letters[i[:-7]][i[-7:-4]]['image'], letters[i[:-7]][i[-7:-4]]['width'], letters[i[:-7]][i[-7:-4]]['height'] = importImage(f"{lettersContainers}{i}")
+
+
 
 EndTopLetters="wrov"
 
@@ -27,8 +34,8 @@ for i in range(len(words)):
     words[i]=words[i]+" "
 
 letterHeight=heightMult*35
-lines=5
-screenWidth=1500
+lines=6
+screenWidth=300*heightMult
 screenHeight=letterHeight*lines
 caption="Cursive Writer"
 
@@ -39,76 +46,87 @@ screen.fill((255,255,255))
 
 
 def saveWord():
+    genWord.append(letters[j])
     global foundLetter
-    genWord.append({})
-    genWord[-1]["image"]=j["image"]
-    genWord[-1]["width"]=j["width"]
     foundLetter=True
 
 
 curX=10
 line=0
+curPic = 0
 
 for word in words:
     genWord=[]
     prevTB="b"
 
-    for i in range(len(word)-1):
+    for ltrN in range(len(word)-1): #for letter
+        ltr = word[ltrN]
         foundLetter=False
+
 
         for j in letters:
 
             if foundLetter!=True:
 
-                if word[i].islower():
+                if ltr.islower():
 
-                    if word[i] in EndTopLetters:
+                    if ltr in EndTopLetters:
 
-                        if f"{prevTB}{word[i]}t"==j["fileName"][0:3]:
+                        if f"{prevTB}{ltr}t"==j[0:3]:
                             saveWord()
                             prevTB="t"
 
                     else:
 
-                        if f"{prevTB}{word[i]}"==j["fileName"][0:2]:
+                        if f"{prevTB}{ltr}"==j[0:2]:
                             saveWord()
                             prevTB="b"
                 else:
 
-                    if word[i]=="/":
-                        if j["fileName"][:5]=="slash":
+                    if ltr=="/":
+                        if j[:5]=="slash":
                             saveWord()
                             prevTB="b"
 
-                    elif word[i]==".":
-                        if j["fileName"][:3]=="dot":
+                    elif ltr==".":
+                        if j[:3]=="dot":
                             saveWord()
                             prevTB="b"
 
-                    elif word[i]==j["fileName"][0:1]:
+                    elif ltr=="!":
+                        if j[:3]=="exclaim":
+                            saveWord()
+                            prevTB="b"
+
+                    elif ltr==j[0:1]:
                             saveWord()
                             prevTB="b"
         if foundLetter==False:
-            if word[i] in EndTopLetters:
-                print(f"Missing: {prevTB}{word[i]}t")
+            if ltr == '^':
+                line += 1.5
+                curX=10
+            elif ltr in EndTopLetters:
+                print(f"Missing: {prevTB}{ltr}t")
             else:
-                print(f"Missing: {prevTB}{word[i]}b")
+                print(f"Missing: {prevTB}{ltr}b")
 
-    totWordWidth=0
+    #display
+    totWordWidth = 0
     for i in genWord:
-        totWordWidth+=i["width"]
+        totWordWidth += i['000']['width']
     if totWordWidth+curX>screenWidth:
         line+=1
         curX=10
-    for i in genWord:
-        screen.blit(i["image"],(curX,line*letterHeight))
-        curX+=i["width"]
-        pygame.display.update()
-        sleep(0.2)
+    for ch in genWord:
+        for px in range(len(ch)):
+            px = f"{px:03}"
+            screen.blit(ch[px]["image"],(curX,line*letterHeight))
+            pygame.display.update()
+            pygame.image.save(screen, f"saves/{curPic:05}.jpg")
+            curPic += 1
+            sleep(0.01)
+        curX+=ch['000']["width"]
     curX+=10*heightMult
-
-
-pygame.image.save(screen, "screenshot.jpg")
 
 while True:
 
@@ -116,7 +134,7 @@ while True:
 
         if event.type==pygame.QUIT:
             pygame.quit()
-            quit()
+            sys.exit()
 
         #if event.type==pygame.KEYDOWN:
         #    if event.key == pygame.K_EQUALS:
